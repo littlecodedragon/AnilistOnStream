@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyAnimeList Manga Scroll</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: transparent;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .scroll-wrapper {
+      display: flex;
+      gap: 30px;
+      animation: scroll-left 60s linear infinite;
+      white-space: nowrap;
+      align-items: center;
+    }
+
+    @keyframes scroll-left {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .manga-item {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 250px;
+      max-width: 350px;
+      height: 100vh;
+      position: relative;
+      padding: 2vh 0;
+    }
+
+    .manga-cover {
+      width: auto;
+      max-width: 100%;
+      height: 80vh;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s ease;
+    }
+
+    .manga-item:hover .manga-cover {
+      transform: scale(1.05);
+    }
+
+    .manga-title {
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.3;
+      max-width: 100%;
+      padding: 0 10px;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .manga-status {
+      margin-top: 6px;
+      padding: 6px 16px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-CURRENT, .status-READING {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .status-COMPLETED {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .status-PAUSED {
+      background-color: #FF9800;
+      color: white;
+    }
+
+    .status-DROPPED {
+      background-color: #F44336;
+      color: white;
+    }
+
+    .status-PLANNING {
+      background-color: #9C27B0;
+      color: white;
+    }
+
+    .status-REPEATING {
+      background-color: #00BCD4;
+      color: white;
+    }
+
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 24px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
+    .error {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #F44336;
+      font-size: 18px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="loading" id="loading">Loading manga list...</div>
+    <div class="scroll-wrapper" id="scrollWrapper"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
