@@ -30,6 +30,9 @@
       "config.example.json",
       "icon.png"
     ],
+    "win": {
+      "window": true
+    },
     "targets": [
       "node18-win-x64",
       "node18-linux-x64"
