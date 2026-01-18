@@ -24,49 +24,72 @@ const useTray = process.env.NO_TRAY !== '1' && (process.platform === 'win32' || 
 if (useTray) {
   try {
     const SysTray = require('systray2').default;
-    
-    const iconPath = path.join(runtimeRoot, 'icon.png');
-    const iconExists = fs.existsSync(iconPath);
-    
-    const menu = {
-      icon: iconExists ? iconPath : '',
-      title: 'MAL On Stream',
-      tooltip: 'MyAnimeList On Stream',
-      items: [
-        {
-          title: 'Open in browser',
-          tooltip: 'Open the dashboard',
-          enabled: true
-        },
-        {
-          title: 'Quit',
-          tooltip: 'Exit application',
-          enabled: true
+
+    const iconPng = path.join(runtimeRoot, 'icon.png');
+    const iconIco = path.join(runtimeRoot, 'icon.ico');
+    const iconPath = process.platform === 'win32' && fs.existsSync(iconIco)
+      ? iconIco
+      : (fs.existsSync(iconPng) ? iconPng : '');
+
+    const itemOpen = {
+      title: 'Open in browser',
+      tooltip: 'Open the dashboard',
+      enabled: true,
+      click: () => {
+        try {
+          const openUrl = `http://localhost:${PORT || 3000}`;
+          const { exec } = require('child_process');
+          const cmd = process.platform === 'win32' ? `start ${openUrl}`
+            : process.platform === 'darwin' ? `open ${openUrl}`
+            : `xdg-open ${openUrl}`;
+          exec(cmd);
+        } catch (e) {
+          console.warn('Tray open handler error:', e.message);
         }
-      ]
+      }
     };
 
-    tray = new SysTray(menu);
+    const itemQuit = {
+      title: 'Quit',
+      tooltip: 'Exit application',
+      enabled: true,
+      click: () => {
+        try {
+          console.log('Quitting via tray...');
+          process.exit(0);
+        } catch (e) {
+          console.warn('Tray quit handler error:', e.message);
+        }
+      }
+    };
 
-    if (tray && typeof tray.onClick === 'function') {
+    tray = new SysTray({
+      menu: {
+        icon: iconPath,
+        isTemplateIcon: process.platform === 'darwin',
+        title: 'MAL On Stream',
+        tooltip: 'MyAnimeList On Stream',
+        items: [itemOpen, itemQuit]
+      },
+      debug: false,
+      copyDir: true
+    });
+
+    if (tray && typeof tray.onClick === 'function' && typeof tray.ready === 'function') {
       tray.onClick(action => {
         try {
-          if (action.item.title === 'Quit') {
-            console.log('Quitting via tray...');
-            process.exit(0);
-          } else if (action.item.title === 'Open in browser') {
-            const openUrl = `http://localhost:${PORT || 3000}`;
-            const { exec } = require('child_process');
-            const cmd = process.platform === 'win32' ? `start ${openUrl}`
-              : process.platform === 'darwin' ? `open ${openUrl}`
-              : `xdg-open ${openUrl}`;
-            exec(cmd);
+          if (action.item && typeof action.item.click === 'function') {
+            action.item.click();
           }
         } catch (e) {
           console.warn('Tray click handler error:', e.message);
         }
       });
-      console.log('✅ System tray enabled');
+      tray.ready().then(() => {
+        console.log('✅ System tray enabled');
+      }).catch(err => {
+        console.warn('⚠️  System tray failed to start:', err.message);
+      });
     } else {
       console.warn('⚠️  System tray did not initialize properly. Continuing without tray.');
     }
