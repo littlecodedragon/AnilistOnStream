@@ -27,8 +27,10 @@ Display your MyAnimeList manga or anime collection as a scrolling browser source
 Replace `YOUR_MAL_USERNAME` with your MyAnimeList username.
 
 4. **Run the binary:**
-   - Windows: Double-click `myanimelist-on-stream.exe`
-   - Linux: `chmod +x myanimelist-on-stream && ./myanimelist-on-stream`
+   - Windows: Double-click `myanimelist-on-stream.exe` (runs in system tray)
+   - Linux: `chmod +x myanimelist-on-stream && ./myanimelist-on-stream` (runs in system tray)
+   - Right-click the tray icon to open dashboard or quit
+   - To run without tray (console mode): set environment variable `NO_TRAY=1`
 
 5. **Add browser source in OBS:**
    - URL: `http://localhost:3000/manga?status=READING&speed=60`

@@ -18,6 +18,56 @@ const cors = require('cors');
 const runtimeRoot = process.pkg ? path.dirname(process.execPath) : __dirname;
 const app = express();
 
+let tray = null;
+const useTray = process.env.NO_TRAY !== '1' && (process.platform === 'win32' || process.platform === 'darwin' || process.platform === 'linux');
+
+if (useTray) {
+  try {
+    const SysTray = require('systray2').default;
+    
+    const iconPath = path.join(runtimeRoot, 'icon.png');
+    const iconExists = fs.existsSync(iconPath);
+    
+    const menu = {
+      icon: iconExists ? iconPath : '',
+      title: 'MAL On Stream',
+      tooltip: 'MyAnimeList On Stream',
+      items: [
+        {
+          title: 'Open in browser',
+          tooltip: 'Open the dashboard',
+          enabled: true
+        },
+        {
+          title: 'Quit',
+          tooltip: 'Exit application',
+          enabled: true
+        }
+      ]
+    };
+
+    tray = new SysTray(menu);
+
+    tray.onClick(action => {
+      if (action.item.title === 'Quit') {
+        console.log('Quitting via tray...');
+        process.exit(0);
+      } else if (action.item.title === 'Open in browser') {
+        const openUrl = `http://localhost:${PORT || 3000}`;
+        const { exec } = require('child_process');
+        const cmd = process.platform === 'win32' ? `start ${openUrl}` 
+          : process.platform === 'darwin' ? `open ${openUrl}` 
+          : `xdg-open ${openUrl}`;
+        exec(cmd);
+      }
+    });
+
+    console.log('✅ System tray enabled');
+  } catch (error) {
+    console.warn('⚠️  System tray unavailable:', error.message);
+  }
+}
+
 let config = { malUsername: 'YOUR_USERNAME', port: 3000, scrollSpeed: 60, debug: false };
 try {
   const configPathCwd = path.join(process.cwd(), 'config.json');

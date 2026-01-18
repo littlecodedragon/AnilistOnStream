@@ -7,8 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build:win": "pkg . --targets node18-win-x64 --output dist/myanimelist-on-stream.exe && cp -r public dist/ && cp config.example.json dist/",
-    "build:linux": "pkg . --targets node18-linux-x64 --output dist/myanimelist-on-stream && cp -r public dist/ && cp config.example.json dist/"
+    "build:win": "pkg . --targets node18-win-x64 --output dist/myanimelist-on-stream.exe && cp -r public dist/ && cp config.example.json dist/ && cp icon.png dist/",
+    "build:linux": "pkg . --targets node18-linux-x64 --output dist/myanimelist-on-stream && cp -r public dist/ && cp config.example.json dist/ && cp icon.png dist/"
   },
   "keywords": ["myanimelist", "mal", "obs", "streaming", "manga"],
   "author": "",
@@ -17,7 +17,8 @@
     "express": "^4.18.2",
     "node-fetch": "^2.7.0",
     "cheerio": "^1.0.0-rc.12",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "systray2": "^2.0.1"
   },
   "devDependencies": {
     "pkg": "^5.8.1"
@@ -26,7 +27,13 @@
     "scripts": "server.js",
     "assets": [
       "public/**/*",
-      "config.example.json"
-    ]
+      "config.example.json",
+      "icon.png"
+    ],
+    "targets": [
+      "node18-win-x64",
+      "node18-linux-x64"
+    ],
+    "outputPath": "dist"
   }
 }
