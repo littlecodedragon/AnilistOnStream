@@ -28,7 +28,8 @@
     "assets": [
       "public/**/*",
       "config.example.json",
-      "icon.png"
+      "icon.png",
+      "node_modules/systray2/**"
     ],
     "win": {
       "window": true

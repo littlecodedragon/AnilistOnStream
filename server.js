@@ -48,21 +48,28 @@ if (useTray) {
 
     tray = new SysTray(menu);
 
-    tray.onClick(action => {
-      if (action.item.title === 'Quit') {
-        console.log('Quitting via tray...');
-        process.exit(0);
-      } else if (action.item.title === 'Open in browser') {
-        const openUrl = `http://localhost:${PORT || 3000}`;
-        const { exec } = require('child_process');
-        const cmd = process.platform === 'win32' ? `start ${openUrl}` 
-          : process.platform === 'darwin' ? `open ${openUrl}` 
-          : `xdg-open ${openUrl}`;
-        exec(cmd);
-      }
-    });
-
-    console.log('✅ System tray enabled');
+    if (tray && typeof tray.onClick === 'function') {
+      tray.onClick(action => {
+        try {
+          if (action.item.title === 'Quit') {
+            console.log('Quitting via tray...');
+            process.exit(0);
+          } else if (action.item.title === 'Open in browser') {
+            const openUrl = `http://localhost:${PORT || 3000}`;
+            const { exec } = require('child_process');
+            const cmd = process.platform === 'win32' ? `start ${openUrl}`
+              : process.platform === 'darwin' ? `open ${openUrl}`
+              : `xdg-open ${openUrl}`;
+            exec(cmd);
+          }
+        } catch (e) {
+          console.warn('Tray click handler error:', e.message);
+        }
+      });
+      console.log('✅ System tray enabled');
+    } else {
+      console.warn('⚠️  System tray did not initialize properly. Continuing without tray.');
+    }
   } catch (error) {
     console.warn('⚠️  System tray unavailable:', error.message);
   }
