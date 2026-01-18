@@ -1,42 +1,80 @@
+if (typeof File === 'undefined' && typeof Blob !== 'undefined') {
+  globalThis.File = class File extends Blob {
+    constructor(parts, name, options = {}) {
+      super(parts, options);
+      this.name = name;
+      this.lastModified = options.lastModified || Date.now();
+    }
+  };
+}
+
 const express = require('express');
 const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
+const cors = require('cors');
+
+const runtimeRoot = process.pkg ? path.dirname(process.execPath) : __dirname;
 const app = express();
 
 let config = { malUsername: 'YOUR_USERNAME', port: 3000, scrollSpeed: 60, debug: false };
 try {
-  const configFile = fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8');
+  const configPathCwd = path.join(process.cwd(), 'config.json');
+  const configPathRoot = path.join(runtimeRoot, 'config.json');
+  const configPath = fs.existsSync(configPathCwd) ? configPathCwd : configPathRoot;
+  const configFile = fs.readFileSync(configPath, 'utf8');
   config = JSON.parse(configFile);
   if (!config.port) config.port = 3000;
   if (!config.scrollSpeed) config.scrollSpeed = 60;
   if (config.debug === undefined) config.debug = false;
+  console.log(`Loaded config from ${configPath}`);
 } catch (error) {
   console.warn('Warning: config.json not found. Using example config. Please create config.json from config.example.json');
 }
 const PORT = config.port || 3000;
-app.use(express.static('public'));
-const statusMap = {
-  'READING': '1',
-  'COMPLETED': '2',
-  'PAUSED': '3',
-  'DROPPED': '4',
-  'PLANNING': '6',
-  'ALL': '7'
+app.use(cors());
+const staticDir = fs.existsSync(path.join(process.cwd(), 'public'))
+  ? path.join(process.cwd(), 'public')
+  : path.join(runtimeRoot, 'public');
+app.use(express.static(staticDir));
+
+const mediaConfigs = {
+  manga: {
+    statusMap: { READING: '1', COMPLETED: '2', PAUSED: '3', DROPPED: '4', PLANNING: '6', ALL: '7' },
+    statusNames: { '1': 'READING', '2': 'COMPLETED', '3': 'PAUSED', '4': 'DROPPED', '6': 'PLANNING' },
+    url: (username, statusCode) => `https://myanimelist.net/mangalist/${username}?status=${statusCode}`,
+    idKey: 'manga_id',
+    titleKey: 'manga_title',
+    imageKey: 'manga_image_path',
+    progressKey: 'num_read_chapters',
+    defaultStatuses: ['READING', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING']
+  },
+  anime: {
+    statusMap: { WATCHING: '1', COMPLETED: '2', PAUSED: '3', DROPPED: '4', PLANNING: '6', ALL: '7' },
+    statusNames: { '1': 'WATCHING', '2': 'COMPLETED', '3': 'PAUSED', '4': 'DROPPED', '6': 'PLANNING' },
+    url: (username, statusCode) => `https://myanimelist.net/animelist/${username}?status=${statusCode}`,
+    idKey: 'anime_id',
+    titleKey: 'anime_title',
+    imageKey: 'anime_image_path',
+    progressKey: 'num_watched_episodes',
+    defaultStatuses: ['WATCHING', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING']
+  }
 };
 
-const statusNames = {
-  '1': 'READING',
-  '2': 'COMPLETED',
-  '3': 'PAUSED',
-  '4': 'DROPPED',
-  '6': 'PLANNING'
-};
-async function scrapeMangaList(username, status) {
-  const malStatus = statusMap[status] || '7';
-  const url = `https://myanimelist.net/mangalist/${username}?status=${malStatus}`;
-  
+function normalizeImage(imagePath) {
+  if (!imagePath) return 'https://cdn.myanimelist.net/images/qm_50.gif';
+  let imageUrl = imagePath.replace('/r/96x136', '').replace('/r/50x70', '');
+  if (imageUrl.startsWith('//')) return 'https:' + imageUrl;
+  if (!imageUrl.startsWith('http')) return 'https://cdn.myanimelist.net' + imageUrl;
+  return imageUrl;
+}
+
+async function scrapeList(username, status, media = 'manga') {
+  const mediaConfig = mediaConfigs[media] || mediaConfigs.manga;
+  const statusCode = mediaConfig.statusMap[status] || '7';
+  const url = mediaConfig.url(username, statusCode);
+
   try {
     const response = await fetch(url, {
       headers: {
@@ -45,7 +83,7 @@ async function scrapeMangaList(username, status) {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch manga list: ${response.status}`);
+      throw new Error(`Failed to fetch list: ${response.status}`);
     }
 
     const html = await response.text();
@@ -56,84 +94,113 @@ async function scrapeMangaList(username, status) {
       dataScript = $('table').attr('data-items');
     }
     if (!dataScript) {
-      throw new Error('Could not find manga data on the page. Make sure the username is correct, the list is public, and MAL layout has not changed.');
+      throw new Error('Could not find list data on the page. Make sure the username is correct, the list is public, and MAL layout has not changed.');
     }
 
-    const mangaData = JSON.parse(dataScript);
-    const mangaList = [];
+    const parsed = JSON.parse(dataScript);
+    const list = [];
 
-    mangaData.forEach(item => {
-      let imageUrl = item.manga_image_path;
-      if (imageUrl) {
-        imageUrl = imageUrl.replace('/r/96x136', '').replace('/r/50x70', '');
-        if (imageUrl.startsWith('//')) {
-          imageUrl = 'https:' + imageUrl;
-        } else if (!imageUrl.startsWith('http')) {
-          imageUrl = 'https://cdn.myanimelist.net' + imageUrl;
-        }
-      }
-
+    parsed.forEach(item => {
+      const imageUrl = normalizeImage(item[mediaConfig.imageKey]);
       const entry = {
-        id: item.manga_id,
-        title: item.manga_title,
-        coverImage: imageUrl || 'https://cdn.myanimelist.net/images/qm_50.gif',
-        status: statusNames[item.status] || status || 'UNKNOWN',
-        progress: item.num_read_chapters || 0
+        id: item[mediaConfig.idKey],
+        title: item[mediaConfig.titleKey],
+        coverImage: imageUrl,
+        status: mediaConfig.statusNames[item.status] || status || 'UNKNOWN',
+        progress: item[mediaConfig.progressKey] || 0,
+        media
       };
-      mangaList.push(entry);
+      list.push(entry);
     });
 
-    return mangaList;
+    return list;
   } catch (error) {
     console.error('Scraping error:', error);
     throw error;
   }
 }
-app.get('/api/manga', async (req, res) => {
+
+async function handleListRequest(req, res, mediaOverride) {
   const status = req.query.status || 'ALL';
-  const speed = req.query.speed ? parseInt(req.query.speed) : config.scrollSpeed;
+  const speed = req.query.speed ? parseInt(req.query.speed, 10) : config.scrollSpeed;
+  const mixed = req.query.mixed === 'true' || req.query.both === 'true';
+  const media = mediaOverride || (req.query.media || 'manga').toLowerCase();
+  const mediaTypes = mixed ? ['manga', 'anime'] : [media];
 
   if (!config.malUsername || config.malUsername === 'YOUR_USERNAME') {
-    return res.status(400).json({ 
-      error: 'MyAnimeList username not configured. Please set malUsername in config.json' 
+    return res.status(400).json({
+      error: 'MyAnimeList username not configured. Please set malUsername in config.json'
     });
   }
-  
+
   try {
-    let mangaList = [];
+    let items = [];
+    const seen = new Set();
 
-    if (status === 'ALL') {
-      const statuses = ['READING', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING'];
-      const results = await Promise.allSettled(statuses.map(s => scrapeMangaList(config.malUsername, s)));
+    for (const mediaType of mediaTypes) {
+      const mediaConfig = mediaConfigs[mediaType] || mediaConfigs.manga;
+      
+      if (status === 'ALL') {
+        const statuses = mediaConfig.defaultStatuses;
+        const results = await Promise.allSettled(statuses.map(s => scrapeList(config.malUsername, s, mediaType)));
 
-      const seen = new Set();
-      results.forEach((res, idx) => {
-        if (res.status === 'fulfilled') {
-          if (config.debug) {
-            console.log(`Fetched ${res.value.length} items for ${statuses[idx]}`);
-          }
-          res.value.forEach(item => {
-            if (!seen.has(item.id)) {
-              seen.add(item.id);
-              mangaList.push(item);
+        results.forEach((result, idx) => {
+          if (result.status === 'fulfilled') {
+            if (config.debug) {
+              console.log(`Fetched ${result.value.length} ${mediaType} items for ${statuses[idx]}`);
             }
-          });
-        } else {
-          console.error(`Error fetching ${statuses[idx]}:`, res.reason?.message || res.reason);
-        }
-      });
-    } else {
-      mangaList = await scrapeMangaList(config.malUsername, status);
+            result.value.forEach(entry => {
+              const uniqueKey = `${entry.media}-${entry.id}`;
+              if (!seen.has(uniqueKey)) {
+                seen.add(uniqueKey);
+                items.push(entry);
+              }
+            });
+          } else {
+            console.error(`Error fetching ${statuses[idx]} (${mediaType}):`, result.reason?.message || result.reason);
+          }
+        });
+      } else {
+        const list = await scrapeList(config.malUsername, status, mediaType);
+        list.forEach(entry => {
+          const uniqueKey = `${entry.media}-${entry.id}`;
+          if (!seen.has(uniqueKey)) {
+            seen.add(uniqueKey);
+            items.push(entry);
+          }
+        });
+      }
     }
 
-    res.json({ manga: mangaList, username: config.malUsername, scrollSpeed: speed });
+    const sortBy = req.query.sort || 'default';
+    if (sortBy === 'title') {
+      items.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === 'status') {
+      const statusOrder = { READING: 1, WATCHING: 1, COMPLETED: 2, PAUSED: 3, DROPPED: 4, PLANNING: 5 };
+      items.sort((a, b) => (statusOrder[a.status] || 9) - (statusOrder[b.status] || 9));
+    } else if (sortBy === 'progress') {
+      items.sort((a, b) => (b.progress || 0) - (a.progress || 0));
+    } else if (sortBy === 'random') {
+      items.sort(() => Math.random() - 0.5);
+    }
+
+    res.json({ items, username: config.malUsername, scrollSpeed: speed, media: mixed ? 'mixed' : media });
   } catch (error) {
-    console.error('Error fetching manga list:', error);
-    res.status(500).json({ error: 'Failed to fetch manga list: ' + error.message });
+    console.error('Error fetching list:', error);
+    res.status(500).json({ error: 'Failed to fetch list: ' + error.message });
   }
-});
+}
+
+app.get('/api/list', (req, res) => handleListRequest(req, res));
+app.get('/api/manga', (req, res) => handleListRequest(req, res, 'manga'));
+app.get('/api/anime', (req, res) => handleListRequest(req, res, 'anime'));
+
 app.get('/manga', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(staticDir, 'index.html'));
+});
+
+app.get('/anime', (req, res) => {
+  res.sendFile(path.join(staticDir, 'index.html'));
 });
 
 app.get('/', (req, res) => {
@@ -144,16 +211,15 @@ app.get('/', (req, res) => {
         <h1>MyAnimeList On Stream</h1>
         <p>Server is running! Add a browser source in OBS with one of these URLs:</p>
         <ul>
-          <li><a href="/manga?status=READING">Currently Reading</a> - <code>http://localhost:${PORT}/manga?status=READING</code></li>
-          <li><a href="/manga?status=COMPLETED">Completed</a> - <code>http://localhost:${PORT}/manga?status=COMPLETED</code></li>
-          <li><a href="/manga?status=PAUSED">On Hold</a> - <code>http://localhost:${PORT}/manga?status=PAUSED</code></li>
-          <li><a href="/manga?status=DROPPED">Dropped</a> - <code>http://localhost:${PORT}/manga?status=DROPPED</code></li>
-          <li><a href="/manga?status=PLANNING">Plan to Read</a> - <code>http://localhost:${PORT}/manga?status=PLANNING</code></li>
+          <li><a href="/manga?status=READING">Currently Reading (Manga)</a> - <code>http://localhost:${PORT}/manga?status=READING</code></li>
+          <li><a href="/manga?status=COMPLETED">Completed (Manga)</a> - <code>http://localhost:${PORT}/manga?status=COMPLETED</code></li>
           <li><a href="/manga?status=ALL">All Manga</a> - <code>http://localhost:${PORT}/manga?status=ALL</code></li>
+          <li><a href="/anime?status=WATCHING&media=anime">Watching (Anime)</a> - <code>http://localhost:${PORT}/anime?status=WATCHING&media=anime</code></li>
+          <li><a href="/anime?status=ALL&media=anime">All Anime</a> - <code>http://localhost:${PORT}/anime?status=ALL&media=anime</code></li>
         </ul>
         <p>Username: <strong>${config.malUsername}</strong></p>
         <p style="color: #666; margin-top: 30px;">Configure your username in config.json</p>
-        <p style="color: #999; font-size: 12px;"><strong>Note:</strong> Your MyAnimeList manga list must be set to public for scraping to work.</p>
+        <p style="color: #999; font-size: 12px;"><strong>Note:</strong> Your MyAnimeList list must be set to public for scraping to work.</p>
       </body>
     </html>
   `);
@@ -163,7 +229,7 @@ app.listen(PORT, () => {
   console.log(`🚀 MyAnimeList On Stream server running on http://localhost:${PORT}`);
   console.log(`📚 Username: ${config.malUsername}`);
   console.log(`\nAdd browser source in OBS: http://localhost:${PORT}/manga?status=READING`);
-  console.log(`\n⚠️  Make sure your manga list is set to PUBLIC on MyAnimeList!`);
+  console.log(`\n⚠️  Make sure your list is set to PUBLIC on MyAnimeList!`);
   if (config.debug) {
     console.log('Debug logging is ENABLED');
   }

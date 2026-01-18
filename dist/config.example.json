@@ -1,0 +1,6 @@
+{
+  "malUsername": "YOUR_MAL_USERNAME",
+  "port": 3000,
+  "scrollSpeed": 60,
+  "debug": false
+}

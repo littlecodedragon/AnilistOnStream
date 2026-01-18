@@ -1,7 +1,6 @@
 const urlParams = new URLSearchParams(window.location.search);
 const status = urlParams.get('status') || 'ALL';
-const inferredMedia = window.location.pathname.includes('/anime') ? 'anime' : 'manga';
-const media = (urlParams.get('media') || inferredMedia).toLowerCase();
+const media = (urlParams.get('media') || 'manga').toLowerCase();
 const speedParam = urlParams.get('speed');
 const apiBase = urlParams.get('api') || window.location.origin;
 
@@ -116,52 +115,16 @@ function calculateAnimationDuration(itemCount, baseSpeed) {
 }
 
 function ensureSeamlessLoop(originalNodes) {
-
-  const minDuplicates = 5;
-  for (let i = 0; i < minDuplicates; i++) {
+  const containerWidth = container.getBoundingClientRect().width;
+  
+  for (let i = 0; i < 2; i++) {
     originalNodes.forEach(node => {
       scrollWrapper.appendChild(node.cloneNode(true));
     });
   }
 
-  
-  const images = scrollWrapper.querySelectorAll('img');
-  let loadedCount = 0;
-  const totalImages = images.length;
-
-  const calculateScrollDistance = () => {
-    const totalWidth = scrollWrapper.getBoundingClientRect().width;
-    const singleSetWidth = totalWidth / (minDuplicates + 1);
-    scrollWrapper.style.setProperty('--scroll-distance', `${singleSetWidth}px`);
-  };
-
-  if (totalImages === 0) {
-    calculateScrollDistance();
-    return;
-  }
-
-  images.forEach(img => {
-    if (img.complete) {
-      loadedCount++;
-    } else {
-      img.addEventListener('load', () => {
-        loadedCount++;
-        if (loadedCount === totalImages) {
-          calculateScrollDistance();
-        }
-      });
-      img.addEventListener('error', () => {
-        loadedCount++;
-        if (loadedCount === totalImages) {
-          calculateScrollDistance();
-        }
-      });
-    }
-  });
-
-  if (loadedCount === totalImages) {
-    calculateScrollDistance();
-  }
+  const singleSetWidth = scrollWrapper.getBoundingClientRect().width / 3;
+  scrollWrapper.style.setProperty('--scroll-distance', `${singleSetWidth}px`);
 }
 
 async function init() {

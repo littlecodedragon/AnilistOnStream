@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "Display MyAnimeList manga collection as scrolling OBS browser source",
   "main": "server.js",
+  "bin": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "build:win": "pkg . --targets node18-win-x64 --output dist/myanimelist-on-stream.exe && cp -r public dist/ && cp config.example.json dist/",
+    "build:linux": "pkg . --targets node18-linux-x64 --output dist/myanimelist-on-stream && cp -r public dist/ && cp config.example.json dist/"
   },
   "keywords": ["myanimelist", "mal", "obs", "streaming", "manga"],
   "author": "",
@@ -13,6 +16,17 @@
   "dependencies": {
     "express": "^4.18.2",
     "node-fetch": "^2.7.0",
-    "cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.0.0-rc.12",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "scripts": "server.js",
+    "assets": [
+      "public/**/*",
+      "config.example.json"
+    ]
   }
 }
