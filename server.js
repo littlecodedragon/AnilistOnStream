@@ -73,8 +73,8 @@ if (useTray) {
 
     const iconPng = path.join(runtimeRoot, 'icon.png');
     const iconIco = path.join(runtimeRoot, 'icon.ico');
-    const iconPath = process.platform === 'win32' && fs.existsSync(iconIco)
-      ? iconIco
+    const iconPath = process.platform === 'win32'
+      ? (fs.existsSync(iconIco) ? iconIco : '')
       : (fs.existsSync(iconPng) ? iconPng : '');
 
     const itemOpen = {
@@ -118,7 +118,7 @@ if (useTray) {
         items: [itemOpen, itemQuit]
       },
       debug: false,
-      copyDir: false
+      copyDir: true
     });
 
     if (tray && typeof tray.onClick === 'function' && typeof tray.ready === 'function') {
