@@ -16,6 +16,7 @@ const path = require('path');
 const cors = require('cors');
 
 const runtimeRoot = process.pkg ? path.dirname(process.execPath) : __dirname;
+const userCwd = process.cwd();
 const app = express();
 
 let tray = null;
@@ -24,6 +25,22 @@ const useTray = process.env.NO_TRAY !== '1' && (process.platform === 'win32' || 
 if (useTray) {
   try {
     const SysTray = require('systray2').default;
+
+    const restoreCwd = () => {
+      try {
+        process.chdir(userCwd);
+      } catch (err) {
+        console.warn('⚠️  Could not restore working directory:', err.message);
+      }
+    };
+
+    try {
+      if (process.cwd() !== runtimeRoot) {
+        process.chdir(runtimeRoot);
+      }
+    } catch (err) {
+      console.warn('⚠️  Could not change working directory for tray init:', err.message);
+    }
 
     // Ensure tray binaries exist on real filesystem (pkg snapshot cannot be executed directly)
     try {
@@ -38,6 +55,7 @@ if (useTray) {
         fs.cpSync(traybinSource, traybinTarget, { recursive: true });
         console.log('Copied systray2 traybin into runtime directory');
       }
+      console.log('Tray binaries expected at:', traybinTarget);
     } catch (copyErr) {
       console.warn('⚠️  Could not prepare tray binaries:', copyErr.message);
     }
@@ -110,6 +128,8 @@ if (useTray) {
     } else {
       console.warn('⚠️  System tray did not initialize properly. Continuing without tray.');
     }
+
+    restoreCwd();
   } catch (error) {
     console.warn('⚠️  System tray unavailable:', error.message);
   }
