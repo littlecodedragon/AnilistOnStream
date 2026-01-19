@@ -7,8 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "build:win": "pkg . --targets node18-win-x64 --output dist/myanimelist-on-stream.exe && cp -r public dist/ && cp config.example.json dist/ && cp icon.png dist/",
-    "build:linux": "pkg . --targets node18-linux-x64 --output dist/myanimelist-on-stream && cp -r public dist/ && cp config.example.json dist/ && cp icon.png dist/"
+    "build:win": "pkg . --targets node18-win-x64 --output dist/myanimelist-on-stream.exe && cp -r public dist/ && cp config.example.json dist/ && cp icon.png dist/ && cp -r node_modules/systray2/traybin dist/",
+    "build:linux": "pkg . --targets node18-linux-x64 --output dist/myanimelist-on-stream && cp -r public dist/ && cp config.example.json dist/ && cp icon.png dist/ && cp -r node_modules/systray2/traybin dist/"
   },
   "keywords": ["myanimelist", "mal", "obs", "streaming", "manga"],
   "author": "",

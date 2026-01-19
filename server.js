@@ -25,6 +25,23 @@ if (useTray) {
   try {
     const SysTray = require('systray2').default;
 
+    // Ensure tray binaries exist on real filesystem (pkg snapshot cannot be executed directly)
+    try {
+      const systrayRoot = path.dirname(require.resolve('systray2/package.json'));
+      const traybinSource = path.join(systrayRoot, 'traybin');
+      const traybinTarget = path.join(runtimeRoot, 'traybin');
+      if (!fs.existsSync(traybinTarget)) {
+        fs.mkdirSync(traybinTarget, { recursive: true });
+      }
+      const hasBins = fs.readdirSync(traybinTarget).some(name => name.startsWith('tray_'));
+      if (!hasBins && fs.existsSync(traybinSource)) {
+        fs.cpSync(traybinSource, traybinTarget, { recursive: true });
+        console.log('Copied systray2 traybin into runtime directory');
+      }
+    } catch (copyErr) {
+      console.warn('⚠️  Could not prepare tray binaries:', copyErr.message);
+    }
+
     const iconPng = path.join(runtimeRoot, 'icon.png');
     const iconIco = path.join(runtimeRoot, 'icon.ico');
     const iconPath = process.platform === 'win32' && fs.existsSync(iconIco)
@@ -72,7 +89,7 @@ if (useTray) {
         items: [itemOpen, itemQuit]
       },
       debug: false,
-      copyDir: true
+      copyDir: false
     });
 
     if (tray && typeof tray.onClick === 'function' && typeof tray.ready === 'function') {
