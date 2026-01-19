@@ -55,7 +55,18 @@ if (useTray) {
         fs.cpSync(traybinSource, traybinTarget, { recursive: true });
         console.log('Copied systray2 traybin into runtime directory');
       }
-      console.log('Tray binaries expected at:', traybinTarget);
+      const platformBin = process.platform === 'win32'
+        ? 'tray_windows_release.exe'
+        : process.platform === 'darwin'
+          ? 'tray_darwin_release'
+          : 'tray_linux_release';
+      const platformBinPath = path.join(traybinTarget, platformBin);
+      console.log('Tray binaries expected at:', traybinTarget, 'platform binary:', platformBinPath);
+      if (!fs.existsSync(platformBinPath)) {
+        console.warn('⚠️  Tray platform binary missing:', platformBinPath);
+      }
+      // Ensure the traybin folder is on PATH for any internal lookups
+      process.env.PATH = `${traybinTarget}${path.delimiter}${process.env.PATH || ''}`;
     } catch (copyErr) {
       console.warn('⚠️  Could not prepare tray binaries:', copyErr.message);
     }
@@ -125,6 +136,17 @@ if (useTray) {
       }).catch(err => {
         console.warn('⚠️  System tray failed to start:', err.message);
       });
+
+      if (tray._process && typeof tray._process.on === 'function') {
+        tray._process.on('error', err => {
+          console.warn('⚠️  Tray process error:', err.message);
+        });
+        tray._process.on('exit', (code, signal) => {
+          if (code !== 0) {
+            console.warn(`⚠️  Tray process exited with code ${code}${signal ? ` signal ${signal}` : ''}`);
+          }
+        });
+      }
     } else {
       console.warn('⚠️  System tray did not initialize properly. Continuing without tray.');
     }
