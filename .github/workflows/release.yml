@@ -18,12 +18,14 @@ jobs:
         include:
           - os: ubuntu-latest
             build_cmd: npm run build:linux
+            package_cmd: tar -czf dist/myanimelist-on-stream-linux.tar.gz -C dist .
             artifact_name: myanimelist-on-stream-linux
-            artifact_path: dist/myanimelist-on-stream
+            artifact_path: dist/myanimelist-on-stream-linux.tar.gz
           - os: windows-latest
             build_cmd: npm run build:win
+            package_cmd: powershell Compress-Archive -Force -Path dist\* -DestinationPath dist\myanimelist-on-stream-windows.zip
             artifact_name: myanimelist-on-stream-windows
-            artifact_path: dist/myanimelist-on-stream.exe
+            artifact_path: dist/myanimelist-on-stream-windows.zip
 
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +39,8 @@ jobs:
           npm run clean || true
           npm run build --if-present
           ${{ matrix.build_cmd }}
+      - name: Package artifact
+        run: ${{ matrix.package_cmd }}
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
