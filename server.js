@@ -121,34 +121,32 @@ if (useTray) {
       copyDir: true
     });
 
-    if (tray && typeof tray.onClick === 'function' && typeof tray.ready === 'function') {
-      tray.onClick(action => {
-        try {
-          if (action.item && typeof action.item.click === 'function') {
-            action.item.click();
-          }
-        } catch (e) {
-          console.warn('Tray click handler error:', e.message);
+    // Initialize tray process and wire events
+    tray.init().then(() => {
+      console.log('✅ System tray process started');
+    }).catch(err => {
+      console.warn('⚠️  System tray init failed:', err.message);
+    });
+
+    tray.onClick(action => {
+      try {
+        if (action.item && typeof action.item.click === 'function') {
+          action.item.click();
+        }
+      } catch (e) {
+        console.warn('Tray click handler error:', e.message);
+      }
+    });
+
+    if (tray._process && typeof tray._process.on === 'function') {
+      tray._process.on('error', err => {
+        console.warn('⚠️  Tray process error:', err.message);
+      });
+      tray._process.on('exit', (code, signal) => {
+        if (code !== 0) {
+          console.warn(`⚠️  Tray process exited with code ${code}${signal ? ` signal ${signal}` : ''}`);
         }
       });
-      tray.ready().then(() => {
-        console.log('✅ System tray enabled');
-      }).catch(err => {
-        console.warn('⚠️  System tray failed to start:', err.message);
-      });
-
-      if (tray._process && typeof tray._process.on === 'function') {
-        tray._process.on('error', err => {
-          console.warn('⚠️  Tray process error:', err.message);
-        });
-        tray._process.on('exit', (code, signal) => {
-          if (code !== 0) {
-            console.warn(`⚠️  Tray process exited with code ${code}${signal ? ` signal ${signal}` : ''}`);
-          }
-        });
-      }
-    } else {
-      console.warn('⚠️  System tray did not initialize properly. Continuing without tray.');
     }
 
     restoreCwd();
