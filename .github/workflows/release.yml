@@ -48,9 +48,79 @@ jobs:
           path: ${{ matrix.artifact_path }}
           if-no-files-found: error
 
+  build-obs-plugin:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            obs_version: "30.0.2"
+            artifact_name: obs-mal-scroll-linux
+            artifact_file: obs-mal-scroll-linux.tar.gz
+          - os: windows-latest
+            obs_version: "30.0.2"
+            artifact_name: obs-mal-scroll-windows
+            artifact_file: obs-mal-scroll-windows.zip
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install OBS Studio (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository ppa:obsproject/obs-studio -y
+          sudo apt-get update
+          sudo apt-get install -y obs-studio libobs-dev libcurl4-openssl-dev cmake build-essential
+
+      - name: Install OBS Studio (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install obs-studio -y
+          choco install cmake -y
+
+      - name: Install vcpkg dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+          C:\vcpkg\bootstrap-vcpkg.bat
+          C:\vcpkg\vcpkg install curl:x64-windows
+
+      - name: Build OBS Plugin (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd obs-plugin
+          mkdir build && cd build
+          cmake ..
+          make -j$(nproc)
+          mkdir -p package/obs-mal-scroll/bin/64bit
+          cp libobs-mal-scroll.so package/obs-mal-scroll/bin/64bit/
+          cd package
+          tar -czf ../../obs-mal-scroll-linux.tar.gz obs-mal-scroll
+
+      - name: Build OBS Plugin (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd obs-plugin
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+          cmake --build . --config Release
+          mkdir -p package/obs-mal-scroll/bin/64bit
+          cp Release/obs-mal-scroll.dll package/obs-mal-scroll/bin/64bit/
+          cd package
+          powershell Compress-Archive -Force -Path obs-mal-scroll -DestinationPath ../../obs-mal-scroll-windows.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: obs-plugin/${{ matrix.artifact_file }}
+          if-no-files-found: error
+
   release:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, build-obs-plugin]
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4

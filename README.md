@@ -1,10 +1,29 @@
 # MyAnimeList On Stream
 
-Display your MyAnimeList manga or anime collection as a scrolling browser source for OBS or StreamElements.
+Display your MyAnimeList manga or anime collection on stream with two options:
 
-## Quick Start (Recommended)
+## Option 1: Native OBS Plugin (Recommended)
 
-**Download pre-built binaries from [Releases](../../releases) - no Node.js installation needed!**
+A native OBS Studio plugin with bitmap font rendering for optimal performance.
+
+**See [obs-plugin/README.md](obs-plugin/README.md) for build and installation instructions.**
+
+### Features
+- ✨ Native rendering (no browser source needed)
+- 📚 Manga, Anime, or Both
+- 🎨 Color-coded status badges
+- 🔄 Auto-refresh from MyAnimeList
+- ⚙️ Fully customizable in OBS properties
+
+---
+
+## Option 2: Browser Source (Legacy)
+
+A Node.js server that provides a browser source for OBS or StreamElements.
+
+### Quick Start with Pre-built Binaries
+
+**Download from [Releases](../../releases) - no Node.js needed!**
 
 1. **Make sure your MyAnimeList manga list is PUBLIC**
    - Go to https://myanimelist.net/editprofile.php?go=listpreferences

@@ -1,0 +1,1 @@
+/home/beat/.var/app/com.obsproject.Studio/config/obs-studio/plugins/obs-mal-scroll/bin/64bit/libobs-mal-scroll.so

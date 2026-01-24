@@ -1,0 +1,7 @@
+/home/beat/git/AnilistOnStream/obs-plugin/build/CMakeFiles/obs-mal-scroll.dir
+/home/beat/git/AnilistOnStream/obs-plugin/build/CMakeFiles/edit_cache.dir
+/home/beat/git/AnilistOnStream/obs-plugin/build/CMakeFiles/rebuild_cache.dir
+/home/beat/git/AnilistOnStream/obs-plugin/build/CMakeFiles/list_install_components.dir
+/home/beat/git/AnilistOnStream/obs-plugin/build/CMakeFiles/install.dir
+/home/beat/git/AnilistOnStream/obs-plugin/build/CMakeFiles/install/local.dir
+/home/beat/git/AnilistOnStream/obs-plugin/build/CMakeFiles/install/strip.dir

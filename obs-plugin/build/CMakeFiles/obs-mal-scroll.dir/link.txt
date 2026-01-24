@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -O2 -g -DNDEBUG -Wl,--dependency-file=CMakeFiles/obs-mal-scroll.dir/link.d -shared  -o libobs-mal-scroll.so "CMakeFiles/obs-mal-scroll.dir/src/plugin-main.cpp.o" "CMakeFiles/obs-mal-scroll.dir/src/mal-source.cpp.o" "CMakeFiles/obs-mal-scroll.dir/src/mal-fetcher.cpp.o"  -Wl,-rpath,/app/lib: /app/lib/libobs.so.30 /usr/lib/x86_64-linux-gnu/libcurl.so

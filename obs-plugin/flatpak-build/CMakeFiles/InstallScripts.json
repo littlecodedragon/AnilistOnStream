@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/beat/git/AnilistOnStream/obs-plugin/flatpak-build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
