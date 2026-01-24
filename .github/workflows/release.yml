@@ -74,13 +74,17 @@ jobs:
         run: |
           sudo add-apt-repository ppa:obsproject/obs-studio -y
           sudo apt-get update
+            choco install ninja -y
+          shell: bash
           sudo apt-get install -y libobs-dev libcurl4-openssl-dev cmake build-essential pkg-config
 
       - name: Install OBS Studio (Windows)
         if: runner.os == 'Windows'
         run: |
+            OBS_CMAKE_DIR="C:/Program Files/obs-studio/cmake"
+            rm -rf obs-plugin/build
           choco install obs-studio -y
-          choco install cmake -y
+            cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -Dlibobs_DIR="$OBS_CMAKE_DIR" -DCMAKE_PREFIX_PATH="C:/Program Files/obs-studio"
 
       - name: Install vcpkg dependencies (Windows)
         if: runner.os == 'Windows'
