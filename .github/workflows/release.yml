@@ -96,7 +96,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           rm -rf obs-plugin/build
-          cmake -S obs-plugin -B obs-plugin/build -Dlibobs_DIR=/usr/lib/x86_64-linux-gnu/cmake/libobs
+          cmake -S obs-plugin -B obs-plugin/build -Dlibobs_DIR=/usr/lib/x86_64-linux-gnu/cmake/obs -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/cmake/obs
           cmake --build obs-plugin/build --config Release
           mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
           cp obs-plugin/build/libobs-mal-scroll.so obs-plugin/build/package/obs-mal-scroll/bin/64bit/
