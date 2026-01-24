@@ -1,11 +1,14 @@
 # Fallback finder for libobs when a config package is not present (e.g., Windows choco install).
 
-set(_OBS_INC_HINTS
-    "$ENV{ProgramW6432}/obs-studio/include"
-    "$ENV{ProgramFiles}/obs-studio/include"
-)
-if(DEFINED ENV{ProgramFiles\(x86\)})
-    list(APPEND _OBS_INC_HINTS "$ENV{ProgramFiles\(x86\)}/obs-studio/include")
+set(_OBS_INC_HINTS)
+if(DEFINED ENV{ProgramW6432})
+    list(APPEND _OBS_INC_HINTS "$ENV{ProgramW6432}/obs-studio/include")
+endif()
+if(DEFINED ENV{ProgramFiles})
+    list(APPEND _OBS_INC_HINTS "$ENV{ProgramFiles}/obs-studio/include")
+endif()
+if(DEFINED ENV{ProgramFiles(x86)})
+    list(APPEND _OBS_INC_HINTS "$ENV{ProgramFiles(x86)}/obs-studio/include")
 endif()
 
 find_path(LIBOBS_INCLUDE_DIR
@@ -13,16 +16,23 @@ find_path(LIBOBS_INCLUDE_DIR
     PATHS ${_OBS_INC_HINTS}
 )
 
-set(_OBS_LIB_HINTS
-    "$ENV{ProgramW6432}/obs-studio/bin/64bit"
-    "$ENV{ProgramW6432}/obs-studio/obs-plugins/64bit"
-    "$ENV{ProgramFiles}/obs-studio/bin/64bit"
-    "$ENV{ProgramFiles}/obs-studio/obs-plugins/64bit"
-)
-if(DEFINED ENV{ProgramFiles\(x86\)})
+set(_OBS_LIB_HINTS)
+if(DEFINED ENV{ProgramW6432})
     list(APPEND _OBS_LIB_HINTS
-        "$ENV{ProgramFiles\(x86\)}/obs-studio/bin/64bit"
-        "$ENV{ProgramFiles\(x86\)}/obs-studio/obs-plugins/64bit"
+        "$ENV{ProgramW6432}/obs-studio/bin/64bit"
+        "$ENV{ProgramW6432}/obs-studio/obs-plugins/64bit"
+    )
+endif()
+if(DEFINED ENV{ProgramFiles})
+    list(APPEND _OBS_LIB_HINTS
+        "$ENV{ProgramFiles}/obs-studio/bin/64bit"
+        "$ENV{ProgramFiles}/obs-studio/obs-plugins/64bit"
+    )
+endif()
+if(DEFINED ENV{ProgramFiles(x86)})
+    list(APPEND _OBS_LIB_HINTS
+        "$ENV{ProgramFiles(x86)}/obs-studio/bin/64bit"
+        "$ENV{ProgramFiles(x86)}/obs-studio/obs-plugins/64bit"
     )
 endif()
 
