@@ -152,6 +152,8 @@ jobs:
             -Dlibobs_DIR="$env:OBS_LIBOBS_CONFIG" `
             -DLIBOBS_IMPLIB="$env:LIBOBS_IMPLIB_PATH" `
             -DLIBOBS_INCLUDE_DIR="$env:LIBOBS_INCLUDE_PATH" `
+            -DW32PTHREADS_INCLUDE_DIR="C:/obs-src/build/deps/w32-pthreads" `
+            -DW32PTHREADS_LIBRARY="C:/obs-src/build/deps/w32-pthreads/Release/w32-pthreads.lib" `
             -DSIMDE_INCLUDE_DIR="C:/obs-deps/include" `
             -DCMAKE_MODULE_PATH="$env:LOCAL_MODULE_PATH" `
             -DCMAKE_PREFIX_PATH="$env:OBS_LIBOBS_CONFIG;C:/obs-deps;C:/obs-src/build"
