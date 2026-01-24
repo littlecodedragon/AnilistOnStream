@@ -102,17 +102,32 @@ jobs:
           cd obs-plugin/build/package
           tar -czf ../../obs-mal-scroll-linux.tar.gz obs-mal-scroll
 
-      - name: Prepare OBS libobs (Windows)
+      - name: Download OBS deps (Windows)
         if: runner.os == 'Windows'
         shell: powershell
         run: |
-          # Clone OBS Studio with submodules
-          git clone --recursive https://github.com/obsproject/obs-studio.git C:/obs-src
+          # Download pre-built OBS dependencies
+          $OBS_DEPS_VERSION = "2025-08-23"
+          Invoke-WebRequest -Uri "https://github.com/obsproject/obs-deps/releases/download/$OBS_DEPS_VERSION/windows-deps-$OBS_DEPS_VERSION-x64.zip" -OutFile "C:/obs-deps.zip"
+          Expand-Archive -Path "C:/obs-deps.zip" -DestinationPath "C:/obs-deps" -Force
+
+      - name: Clone and Build OBS libobs (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          # Clone OBS Studio (shallow, no submodules needed for libobs only)
+          git clone --depth 1 --branch 32.0.4 https://github.com/obsproject/obs-studio.git C:/obs-src
           cd C:/obs-src
-          # Configure using CMake preset (downloads deps automatically)
-          cmake --preset windows-x64
-          # Build libobs only in Release to generate import lib
-          cmake --build --preset windows-x64 --config Release --target libobs
+          # Configure with manual paths to deps
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_PREFIX_PATH="C:/obs-deps" `
+            -DCMAKE_SYSTEM_VERSION="10.0" `
+            -DENABLE_BROWSER=OFF `
+            -DENABLE_WEBSOCKET=OFF `
+            -DENABLE_PLUGINS=OFF `
+            -DBUILD_BROWSER=OFF
+          # Build libobs only
+          cmake --build build --config Release --target obs
 
       - name: Build OBS Plugin (Windows)
         if: runner.os == 'Windows'
