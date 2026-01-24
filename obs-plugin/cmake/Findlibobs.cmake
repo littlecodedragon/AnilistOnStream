@@ -1,19 +1,34 @@
 # Fallback finder for libobs when a config package is not present (e.g., Windows choco install).
 
+set(_OBS_INC_HINTS
+    "$ENV{ProgramW6432}/obs-studio/include"
+    "$ENV{ProgramFiles}/obs-studio/include"
+)
+if(DEFINED ENV{ProgramFiles\(x86\)})
+    list(APPEND _OBS_INC_HINTS "$ENV{ProgramFiles\(x86\)}/obs-studio/include")
+endif()
+
 find_path(LIBOBS_INCLUDE_DIR
     NAMES obs.h
-    PATHS
-        "$ENV{PROGRAMFILES}/obs-studio/include"
-        "$ENV{PROGRAMFILES(X86)}/obs-studio/include"
+    PATHS ${_OBS_INC_HINTS}
 )
+
+set(_OBS_LIB_HINTS
+    "$ENV{ProgramW6432}/obs-studio/bin/64bit"
+    "$ENV{ProgramW6432}/obs-studio/obs-plugins/64bit"
+    "$ENV{ProgramFiles}/obs-studio/bin/64bit"
+    "$ENV{ProgramFiles}/obs-studio/obs-plugins/64bit"
+)
+if(DEFINED ENV{ProgramFiles\(x86\)})
+    list(APPEND _OBS_LIB_HINTS
+        "$ENV{ProgramFiles\(x86\)}/obs-studio/bin/64bit"
+        "$ENV{ProgramFiles\(x86\)}/obs-studio/obs-plugins/64bit"
+    )
+endif()
 
 find_library(LIBOBS_LIBRARY
     NAMES obs libobs
-    PATHS
-        "$ENV{PROGRAMFILES}/obs-studio/bin/64bit"
-        "$ENV{PROGRAMFILES}/obs-studio/obs-plugins/64bit"
-        "$ENV{PROGRAMFILES(X86)}/obs-studio/bin/64bit"
-        "$ENV{PROGRAMFILES(X86)}/obs-studio/obs-plugins/64bit"
+    PATHS ${_OBS_LIB_HINTS}
 )
 
 include(FindPackageHandleStandardArgs)
