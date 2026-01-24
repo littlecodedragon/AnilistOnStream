@@ -75,7 +75,7 @@ jobs:
         run: |
           sudo add-apt-repository ppa:obsproject/obs-studio -y
           sudo apt-get update
-          sudo apt-get install -y libobs-dev libcurl4-openssl-dev cmake build-essential pkg-config
+          sudo apt-get install -y libobs-dev libcurl4-openssl-dev nlohmann-json3-dev cmake build-essential pkg-config
 
 
       - name: Install vcpkg dependencies (Windows)
