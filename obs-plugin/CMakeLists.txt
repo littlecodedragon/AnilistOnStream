@@ -31,6 +31,14 @@ target_include_directories(obs-mal-scroll PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+# Propagate libobs include directories explicitly (configs on some distros lack them)
+if(TARGET OBS::libobs)
+    get_target_property(_obs_inc OBS::libobs INTERFACE_INCLUDE_DIRECTORIES)
+    if(_obs_inc)
+        target_include_directories(obs-mal-scroll PRIVATE ${_obs_inc})
+    endif()
+endif()
+
 # Install the plugin
 option(INSTALL_FLATPAK "Install to Flatpak OBS location" OFF)
 
