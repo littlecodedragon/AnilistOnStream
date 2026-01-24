@@ -128,6 +128,8 @@ jobs:
             -DBUILD_BROWSER=OFF
           # Build libobs only
           cmake --build build --config Release --target libobs
+          # Install libobs to a known prefix to expose a config package
+          cmake --install build --config Release --prefix C:/obs-install
 
       - name: Build OBS Plugin (Windows)
         if: runner.os == 'Windows'
@@ -137,7 +139,11 @@ jobs:
           # Provide source/build hints for fallback finder
           $env:OBS_SOURCE_DIR = "C:/obs-src"
           $env:OBS_BUILD_DIR  = "C:/obs-src"
-          cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          $env:OBS_INSTALL_DIR = "C:/obs-install"
+          cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
+            -Dlibobs_DIR="$env:OBS_INSTALL_DIR/lib/cmake/libobs" `
+            -DCMAKE_PREFIX_PATH="$env:OBS_INSTALL_DIR;C:/obs-deps"
           cmake --build obs-plugin/build --config Release
           mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
           cp obs-plugin/build/Release/obs-mal-scroll.dll obs-plugin/build/package/obs-mal-scroll/bin/64bit/
