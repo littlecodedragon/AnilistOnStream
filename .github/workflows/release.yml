@@ -145,7 +145,7 @@ jobs:
           $env:OBS_LIBOBS_CONFIG = "C:/obs-src/build/lib/cmake/libobs"
           $env:LIBOBS_IMPLIB_PATH = "C:/obs-src/build/libobs/Release/obs.lib"
           $env:LIBOBS_INCLUDE_PATH = "C:/obs-src/libobs"
-          $env:LOCAL_MODULE_PATH = "$env:GITHUB_WORKSPACE/obs-plugin/cmake"
+          $env:LOCAL_MODULE_PATH = "$(("$env:GITHUB_WORKSPACE" -replace '\\','/') + "/obs-plugin/cmake")"
           # Prefer the build-tree config
           cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
