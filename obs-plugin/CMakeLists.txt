@@ -32,10 +32,22 @@ target_include_directories(obs-mal-scroll PRIVATE
 )
 
 # Propagate libobs include directories explicitly (configs on some distros lack them)
+set(_obs_inc "")
 if(TARGET OBS::libobs)
     get_target_property(_obs_inc OBS::libobs INTERFACE_INCLUDE_DIRECTORIES)
     if(_obs_inc)
         target_include_directories(obs-mal-scroll PRIVATE ${_obs_inc})
+    endif()
+endif()
+
+# Fallback for environments where libobs config omits include dirs
+if(NOT _obs_inc)
+    find_path(LIBOBS_FALLBACK_INCLUDE
+        NAMES obs-module.h
+        PATHS /usr/include/obs /usr/local/include/obs /usr/include /usr/local/include
+    )
+    if(LIBOBS_FALLBACK_INCLUDE)
+        target_include_directories(obs-mal-scroll PRIVATE ${LIBOBS_FALLBACK_INCLUDE})
     endif()
 endif()
 
