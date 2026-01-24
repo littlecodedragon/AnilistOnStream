@@ -54,12 +54,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            obs_version: "30.0.2"
+          - os: ubuntu-22.04
             artifact_name: obs-mal-scroll-linux
             artifact_file: obs-mal-scroll-linux.tar.gz
           - os: windows-latest
-            obs_version: "30.0.2"
             artifact_name: obs-mal-scroll-windows
             artifact_file: obs-mal-scroll-windows.zip
 
@@ -89,26 +87,21 @@ jobs:
       - name: Build OBS Plugin (Linux)
         if: runner.os == 'Linux'
         run: |
-          cd obs-plugin
-          mkdir build && cd build
-          cmake ..
-          make -j$(nproc)
-          mkdir -p package/obs-mal-scroll/bin/64bit
-          cp libobs-mal-scroll.so package/obs-mal-scroll/bin/64bit/
-          cd package
+          cmake -S obs-plugin -B obs-plugin/build
+          cmake --build obs-plugin/build --config Release
+          mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
+          cp obs-plugin/build/libobs-mal-scroll.so obs-plugin/build/package/obs-mal-scroll/bin/64bit/
+          cd obs-plugin/build/package
           tar -czf ../../obs-mal-scroll-linux.tar.gz obs-mal-scroll
 
       - name: Build OBS Plugin (Windows)
         if: runner.os == 'Windows'
         run: |
-          cd obs-plugin
-          mkdir build
-          cd build
-          cmake -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ..
-          cmake --build . --config Release
-          mkdir -p package/obs-mal-scroll/bin/64bit
-          cp Release/obs-mal-scroll.dll package/obs-mal-scroll/bin/64bit/
-          cd package
+          cmake -S obs-plugin -B obs-plugin/build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake --build obs-plugin/build --config Release
+          mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
+          cp obs-plugin/build/Release/obs-mal-scroll.dll obs-plugin/build/package/obs-mal-scroll/bin/64bit/
+          cd obs-plugin/build/package
           powershell Compress-Archive -Force -Path obs-mal-scroll -DestinationPath ../../obs-mal-scroll-windows.zip
 
       - name: Upload artifact
