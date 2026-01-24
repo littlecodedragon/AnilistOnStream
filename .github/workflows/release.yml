@@ -127,7 +127,7 @@ jobs:
             -DENABLE_PLUGINS=OFF `
             -DBUILD_BROWSER=OFF
           # Build libobs only
-          cmake --build build --config Release --target obs
+          cmake --build build --config Release --target libobs
 
       - name: Build OBS Plugin (Windows)
         if: runner.os == 'Windows'
