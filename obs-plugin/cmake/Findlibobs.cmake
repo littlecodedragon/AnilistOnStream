@@ -85,14 +85,16 @@ if(WIN32)
     find_package_handle_standard_args(libobs REQUIRED_VARS LIBOBS_INCLUDE_DIR LIBOBS_IMPLIB)
 
     if(libobs_FOUND)
-        add_library(OBS::libobs SHARED IMPORTED)
-        if(LIBOBS_DLL)
-            set_target_properties(OBS::libobs PROPERTIES IMPORTED_LOCATION "${LIBOBS_DLL}")
+        if(NOT TARGET OBS::libobs)
+            add_library(OBS::libobs SHARED IMPORTED)
+            if(LIBOBS_DLL)
+                set_target_properties(OBS::libobs PROPERTIES IMPORTED_LOCATION "${LIBOBS_DLL}")
+            endif()
+            set_target_properties(OBS::libobs PROPERTIES
+                IMPORTED_IMPLIB "${LIBOBS_IMPLIB}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBOBS_INCLUDE_DIR}"
+            )
         endif()
-        set_target_properties(OBS::libobs PROPERTIES
-            IMPORTED_IMPLIB "${LIBOBS_IMPLIB}"
-            INTERFACE_INCLUDE_DIRECTORIES "${LIBOBS_INCLUDE_DIR}"
-        )
     endif()
 else()
     # Unix: try pkg-config, else search common include/lib paths
@@ -114,10 +116,12 @@ else()
     find_package_handle_standard_args(libobs REQUIRED_VARS LIBOBS_INCLUDE_DIR LIBOBS_LIBRARY)
 
     if(libobs_FOUND)
-        add_library(OBS::libobs SHARED IMPORTED)
-        set_target_properties(OBS::libobs PROPERTIES
-            IMPORTED_LOCATION "${LIBOBS_LIBRARY}"
-            INTERFACE_INCLUDE_DIRECTORIES "${LIBOBS_INCLUDE_DIR}"
-        )
+        if(NOT TARGET OBS::libobs)
+            add_library(OBS::libobs SHARED IMPORTED)
+            set_target_properties(OBS::libobs PROPERTIES
+                IMPORTED_LOCATION "${LIBOBS_LIBRARY}"
+                INTERFACE_INCLUDE_DIRECTORIES "${LIBOBS_INCLUDE_DIR}"
+            )
+        endif()
     endif()
 endif()
