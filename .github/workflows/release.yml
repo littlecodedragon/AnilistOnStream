@@ -110,7 +110,8 @@ jobs:
           if (Test-Path obs-plugin/build) { Remove-Item -Recurse -Force obs-plugin/build }
           $OBS_PREFIX = "C:/Program Files/obs-studio"
           $OBS_CMAKE_DIR = "$OBS_PREFIX/cmake"
-          cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -Dlibobs_DIR="$OBS_CMAKE_DIR" -DCMAKE_PREFIX_PATH="$OBS_PREFIX;$OBS_CMAKE_DIR" -DCMAKE_MODULE_PATH="$OBS_CMAKE_DIR"
+          $OBS_PLUGIN_CMAKE_DIR = "$OBS_PREFIX/obs-plugins/64bit/cmake"
+          cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -Dlibobs_DIR="$OBS_CMAKE_DIR" -DCMAKE_PREFIX_PATH="$OBS_PREFIX;$OBS_CMAKE_DIR;$OBS_PLUGIN_CMAKE_DIR" -DCMAKE_MODULE_PATH="$OBS_CMAKE_DIR;$OBS_PLUGIN_CMAKE_DIR"
           cmake --build obs-plugin/build --config Release
           mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
           cp obs-plugin/build/Release/obs-mal-scroll.dll obs-plugin/build/package/obs-mal-scroll/bin/64bit/
