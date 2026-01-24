@@ -4,20 +4,56 @@ include(FindPackageHandleStandardArgs)
 
 if(WIN32)
     # Windows: locate headers, import library and optional DLL
+    # Allow explicit hints via environment variables
+    set(_OBS_SDK_DIR "$ENV{OBS_SDK_DIR}")
+    set(_OBS_SRC_DIR "$ENV{OBS_SOURCE_DIR}")
+    set(_OBS_BUILD_DIR "$ENV{OBS_BUILD_DIR}")
+
+    # Standard Program Files locations (x64, x86)
     set(_pf64 "$ENV{ProgramW6432}")
     set(_pf   "$ENV{ProgramFiles}")
+    set(_pf86 "$ENV{ProgramFiles\(x86\)}")
 
+    # Include hints
     set(_OBS_INC_HINTS)
+    if(_OBS_SDK_DIR AND NOT _OBS_SDK_DIR STREQUAL "")
+        list(APPEND _OBS_INC_HINTS
+            "${_OBS_SDK_DIR}/include"
+            "${_OBS_SDK_DIR}/include/obs"
+        )
+    endif()
+    if(_OBS_SRC_DIR AND NOT _OBS_SRC_DIR STREQUAL "")
+        # OBS source tree headers
+        list(APPEND _OBS_INC_HINTS "${_OBS_SRC_DIR}/libobs" "${_OBS_SRC_DIR}/include")
+    endif()
     if(NOT _pf64 STREQUAL "")
         list(APPEND _OBS_INC_HINTS "${_pf64}/obs-studio/include")
     endif()
     if(NOT _pf STREQUAL "")
         list(APPEND _OBS_INC_HINTS "${_pf}/obs-studio/include")
     endif()
+    if(NOT _pf86 STREQUAL "")
+        list(APPEND _OBS_INC_HINTS "${_pf86}/obs-studio/include")
+    endif()
 
     find_path(LIBOBS_INCLUDE_DIR NAMES obs.h PATHS ${_OBS_INC_HINTS})
 
+    # Library (import lib) and DLL hints
     set(_OBS_LIB_HINTS)
+    if(_OBS_SDK_DIR AND NOT _OBS_SDK_DIR STREQUAL "")
+        list(APPEND _OBS_LIB_HINTS
+            "${_OBS_SDK_DIR}/lib"
+            "${_OBS_SDK_DIR}/bin/64bit"
+        )
+    endif()
+    if(_OBS_BUILD_DIR AND NOT _OBS_BUILD_DIR STREQUAL "")
+        list(APPEND _OBS_LIB_HINTS
+            "${_OBS_BUILD_DIR}/build_x64/lib"
+            "${_OBS_BUILD_DIR}/rundir/Release/bin/64bit"
+            "${_OBS_BUILD_DIR}/build/lib"
+            "${_OBS_BUILD_DIR}/build/Release"
+        )
+    endif()
     if(NOT _pf64 STREQUAL "")
         list(APPEND _OBS_LIB_HINTS
             "${_pf64}/obs-studio/bin/64bit"
@@ -30,6 +66,13 @@ if(WIN32)
             "${_pf}/obs-studio/bin/64bit"
             "${_pf}/obs-studio/obs-plugins/64bit"
             "${_pf}/obs-studio/lib/64bit"
+        )
+    endif()
+    if(NOT _pf86 STREQUAL "")
+        list(APPEND _OBS_LIB_HINTS
+            "${_pf86}/obs-studio/bin/64bit"
+            "${_pf86}/obs-studio/obs-plugins/64bit"
+            "${_pf86}/obs-studio/lib/64bit"
         )
     endif()
 

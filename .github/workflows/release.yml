@@ -77,13 +77,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libobs-dev libcurl4-openssl-dev cmake build-essential pkg-config
 
-      - name: Install OBS Studio (Windows)
-        if: runner.os == 'Windows'
-        shell: powershell
-        run: |
-          choco install obs-studio -y
-          choco install cmake -y
-          choco install ninja -y
 
       - name: Install vcpkg dependencies (Windows)
         if: runner.os == 'Windows'
@@ -109,15 +102,27 @@ jobs:
           cd obs-plugin/build/package
           tar -czf ../../obs-mal-scroll-linux.tar.gz obs-mal-scroll
 
+      - name: Prepare OBS libobs (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          # Clone OBS Studio with submodules
+          git clone --recursive https://github.com/obsproject/obs-studio.git C:/obs-src
+          cd C:/obs-src
+          # Configure using CMake preset (downloads deps automatically)
+          cmake --preset windows-x64
+          # Build libobs only in Release to generate import lib
+          cmake --build --preset windows-x64 --config Release --target libobs
+
       - name: Build OBS Plugin (Windows)
         if: runner.os == 'Windows'
         shell: powershell
         run: |
           if (Test-Path obs-plugin/build) { Remove-Item -Recurse -Force obs-plugin/build }
-          $OBS_PREFIX = "C:/Program Files/obs-studio"
-          $OBS_CMAKE_DIR = "$OBS_PREFIX/cmake"
-          $OBS_PLUGIN_CMAKE_DIR = "$OBS_PREFIX/obs-plugins/64bit/cmake"
-          cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -Dlibobs_DIR="$OBS_CMAKE_DIR" -DCMAKE_PREFIX_PATH="$OBS_PREFIX;$OBS_CMAKE_DIR;$OBS_PLUGIN_CMAKE_DIR" -DCMAKE_MODULE_PATH="$OBS_CMAKE_DIR;$OBS_PLUGIN_CMAKE_DIR"
+          # Provide source/build hints for fallback finder
+          $env:OBS_SOURCE_DIR = "C:/obs-src"
+          $env:OBS_BUILD_DIR  = "C:/obs-src"
+          cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
           cmake --build obs-plugin/build --config Release
           mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
           cp obs-plugin/build/Release/obs-mal-scroll.dll obs-plugin/build/package/obs-mal-scroll/bin/64bit/
