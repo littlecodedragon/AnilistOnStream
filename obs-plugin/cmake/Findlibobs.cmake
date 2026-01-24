@@ -52,6 +52,9 @@ if(WIN32)
             "${_OBS_BUILD_DIR}/rundir/Release/bin/64bit"
             "${_OBS_BUILD_DIR}/build/lib"
             "${_OBS_BUILD_DIR}/build/Release"
+            "${_OBS_BUILD_DIR}/build/lib/Release"
+            "${_OBS_BUILD_DIR}/build/lib/RelWithDebInfo"
+            "${_OBS_BUILD_DIR}/build/RelWithDebInfo"
         )
     endif()
     if(NOT _pf64 STREQUAL "")
