@@ -130,6 +130,11 @@ jobs:
           cmake --build build --config Release --target libobs
           # Install libobs to a known prefix to expose a config package
           cmake --install build --config Release --prefix C:/obs-install
+          # Log where the CMake config and import libs landed
+          Write-Host "==== Listing C:/obs-install ===="
+          Get-ChildItem -Recurse -Depth 4 C:/obs-install
+          Write-Host "==== Listing C:/obs-src/build/lib ===="
+          Get-ChildItem -Recurse -Depth 4 C:/obs-src/build/lib
 
       - name: Build OBS Plugin (Windows)
         if: runner.os == 'Windows'
@@ -140,10 +145,12 @@ jobs:
           $env:OBS_SOURCE_DIR = "C:/obs-src"
           $env:OBS_BUILD_DIR  = "C:/obs-src"
           $env:OBS_INSTALL_DIR = "C:/obs-install"
+          $env:OBS_LIBOBS_CONFIG = "C:/obs-src/build/lib/cmake/libobs"
+          # Prefer the build-tree config; fall back to install prefix
           cmake -S obs-plugin -B obs-plugin/build -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake `
-            -Dlibobs_DIR="$env:OBS_INSTALL_DIR/lib/cmake/libobs" `
-            -DCMAKE_PREFIX_PATH="$env:OBS_INSTALL_DIR;C:/obs-deps"
+            -Dlibobs_DIR="$env:OBS_LIBOBS_CONFIG" `
+            -DCMAKE_PREFIX_PATH="$env:OBS_LIBOBS_CONFIG;$env:OBS_INSTALL_DIR;C:/obs-deps;C:/obs-src/build"
           cmake --build obs-plugin/build --config Release
           mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
           cp obs-plugin/build/Release/obs-mal-scroll.dll obs-plugin/build/package/obs-mal-scroll/bin/64bit/
