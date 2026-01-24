@@ -87,6 +87,7 @@ jobs:
       - name: Build OBS Plugin (Linux)
         if: runner.os == 'Linux'
         run: |
+          rm -rf obs-plugin/build
           cmake -S obs-plugin -B obs-plugin/build
           cmake --build obs-plugin/build --config Release
           mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
@@ -97,6 +98,7 @@ jobs:
       - name: Build OBS Plugin (Windows)
         if: runner.os == 'Windows'
         run: |
+          if (Test-Path obs-plugin/build) { Remove-Item -Recurse -Force obs-plugin/build }
           cmake -S obs-plugin -B obs-plugin/build -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake
           cmake --build obs-plugin/build --config Release
           mkdir -p obs-plugin/build/package/obs-mal-scroll/bin/64bit
