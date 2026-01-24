@@ -5,9 +5,13 @@ project(obs-mal-scroll VERSION 1.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
-find_package(libobs REQUIRED)
+# Prefer libobs CONFIG package if available (Linux with libobs-dev)
+find_package(libobs CONFIG QUIET)
+if(NOT libobs_FOUND)
+    # Fallback to our module finder
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+    find_package(libobs REQUIRED)
+endif()
 find_package(CURL REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
