@@ -462,12 +462,11 @@ static void mal_source_update(void *data, obs_data_t *settings)
 
     ctx->fetcher = std::make_unique<MALFetcher>(ctx->username);
 
-    if (!ctx->fetching) {
-        if (ctx->fetch_thread.joinable()) {
-            ctx->fetch_thread.join();
-        }
-        ctx->fetch_thread = std::thread(fetch_entries_async, ctx);
+    // Always restart fetch with the latest username; join any in-flight thread first
+    if (ctx->fetch_thread.joinable()) {
+        ctx->fetch_thread.join();
     }
+    ctx->fetch_thread = std::thread(fetch_entries_async, ctx);
 }
 
 static void mal_source_tick(void *data, float seconds)
