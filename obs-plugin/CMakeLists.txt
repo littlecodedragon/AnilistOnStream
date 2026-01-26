@@ -31,17 +31,21 @@ target_include_directories(obs-mal-scroll PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# Propagate libobs include directories explicitly (configs on some distros lack them)
-set(_obs_inc "")
+# Collect libobs include directories from target and variables, with fallbacks
+set(_obs_inc)
 if(TARGET OBS::libobs)
     get_target_property(_obs_inc OBS::libobs INTERFACE_INCLUDE_DIRECTORIES)
-    if(_obs_inc)
-        target_include_directories(obs-mal-scroll PRIVATE ${_obs_inc})
-    endif()
 endif()
-
-# Fallback for environments where libobs config omits include dirs
-if(NOT _obs_inc)
+if(LIBOBS_INCLUDE_DIR)
+    list(APPEND _obs_inc ${LIBOBS_INCLUDE_DIR})
+endif()
+if(_obs_inc)
+    list(FILTER _obs_inc EXCLUDE REGEX "-NOTFOUND$")
+endif()
+if(_obs_inc)
+    target_include_directories(obs-mal-scroll PRIVATE ${_obs_inc})
+else()
+    # Fallback for environments where libobs config omits include dirs
     find_path(LIBOBS_FALLBACK_INCLUDE
         NAMES obs-module.h
         PATHS /usr/include/obs /usr/local/include/obs /usr/include /usr/local/include
