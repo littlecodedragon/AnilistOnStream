@@ -16,8 +16,8 @@ A native OBS Studio plugin that displays your MyAnimeList manga/anime collection
 
 1. Download the latest release
 2. Extract `obs-mal-scroll.dll` to one of:
-   - `%APPDATA%\obs-studio\plugins\obs-mal-scroll\bin\64bit\` (User install - Recommended)
-   - `C:\Program Files\obs-studio\obs-plugins\64bit\` (System-wide install)
+   - **User install (recommended):** `%APPDATA%\obs-studio\plugins\obs-mal-scroll.dll`
+   - **System-wide:** `C:\Program Files\obs-studio\obs-plugins\64bit\obs-mal-scroll.dll`
 3. Restart OBS Studio
 
 ### Linux (Manual Build)
