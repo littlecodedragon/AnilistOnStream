@@ -38,6 +38,8 @@ if(TARGET OBS::libobs)
 endif()
 if(LIBOBS_INCLUDE_DIR)
     list(APPEND _obs_inc ${LIBOBS_INCLUDE_DIR})
+    # Common layout puts headers under include/obs
+    list(APPEND _obs_inc ${LIBOBS_INCLUDE_DIR}/obs)
 endif()
 if(_obs_inc)
     list(FILTER _obs_inc EXCLUDE REGEX "-NOTFOUND$")
@@ -55,6 +57,13 @@ else()
         target_include_directories(obs-mal-scroll PRIVATE ${LIBOBS_FALLBACK_INCLUDE})
     endif()
 endif()
+
+# As a final safety net, add common OBS include roots if they exist
+foreach(_path IN ITEMS /usr/include/obs /usr/local/include/obs)
+    if(EXISTS ${_path})
+        target_include_directories(obs-mal-scroll PRIVATE ${_path})
+    endif()
+endforeach()
 
 # Install the plugin
 option(INSTALL_FLATPAK "Install to Flatpak OBS location" OFF)
