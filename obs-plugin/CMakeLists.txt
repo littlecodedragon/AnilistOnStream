@@ -48,7 +48,8 @@ else()
     # Fallback for environments where libobs config omits include dirs
     find_path(LIBOBS_FALLBACK_INCLUDE
         NAMES obs-module.h
-        PATHS /usr/include/obs /usr/local/include/obs /usr/include /usr/local/include
+        PATHS /usr/include /usr/local/include
+        PATH_SUFFIXES obs
     )
     if(LIBOBS_FALLBACK_INCLUDE)
         target_include_directories(obs-mal-scroll PRIVATE ${LIBOBS_FALLBACK_INCLUDE})
