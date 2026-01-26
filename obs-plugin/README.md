@@ -20,7 +20,7 @@ A native OBS Studio plugin that displays your MyAnimeList manga/anime collection
    - **System-wide:** `C:\Program Files\obs-studio\obs-plugins\64bit\obs-mal-scroll.dll`
 3. Restart OBS Studio
 
-### Linux (Manual Build)
+### Linux (Manual Build)git push origin main --tags
 
 ```bash
 cd obs-plugin

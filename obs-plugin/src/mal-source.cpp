@@ -454,23 +454,13 @@ static void mal_source_update(void *data, obs_data_t *settings)
         }
     }
 
-    if (ctx->username.empty()) {
-        blog(LOG_WARNING, "No username set");
+    // Require at least 3 characters before attempting to fetch
+    if (ctx->username.empty() || ctx->username.length() < 3) {
+        blog(LOG_INFO, "Username too short or empty, skipping fetch");
         return;
     }
 
     ctx->fetcher = std::make_unique<MALFetcher>(ctx->username);
-
-    {
-        std::lock_guard<std::mutex> lock(ctx->data_mutex);
-        for (auto &img : ctx->images) {
-            if (img.title_tex) ctx->pending_textures_free.push_back(img.title_tex), img.title_tex = nullptr;
-            if (img.title2_tex) ctx->pending_textures_free.push_back(img.title2_tex), img.title2_tex = nullptr;
-            if (img.title3_tex) ctx->pending_textures_free.push_back(img.title3_tex), img.title3_tex = nullptr;
-            if (img.title4_tex) ctx->pending_textures_free.push_back(img.title4_tex), img.title4_tex = nullptr;
-            if (img.status_tex) ctx->pending_textures_free.push_back(img.status_tex), img.status_tex = nullptr;
-        }
-    }
 
     if (!ctx->fetching) {
         if (ctx->fetch_thread.joinable()) {
