@@ -134,9 +134,10 @@ static void fetch_entries_async(mal_source *ctx)
         }
 
         std::lock_guard<std::mutex> lock(ctx->data_mutex);
+
         ctx->entries = std::move(entries);
         blog(LOG_INFO, "[MAL] ===== Loaded %zu entries from fetcher =====", ctx->entries.size());
-        if (ctx->entries.size() > 0) {
+        if (!ctx->entries.empty()) {
             blog(LOG_INFO, "[MAL] First entry: '%s' (status=%s, media=%s)",
                  ctx->entries[0].title.c_str(), ctx->entries[0].status.c_str(), ctx->entries[0].media.c_str());
         }
